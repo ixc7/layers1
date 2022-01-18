@@ -12,21 +12,33 @@ random256 () {
   echo $(( $RANDOM % 256 + 1 ))
 }
 
+declare -a list=($(ls "images"))
+declare -a txtList
+
 randomImg () {
   selection=${list[$RANDOM % ${#list[@]} ]}
   echo "images/${selection}"
 }
 
-declare -a list=($(ls "images"))
+randomTxt () {
+  selection=${txtList[$RANDOM % ${#txtList[@]} ]}
+  echo "${selection}"
+}
+
 imgFile=$(mktemp)
 txtFile=$(mktemp)
 space="\x1b[1C"
 input="${@}"
 [[ -z "${@}" ]] && input="image.png"
 
+while IFS= read -r line; do
+  txtList+=("${line}") 
+done <"text.txt"
+
 while true; do
 
-figlet -f elite "it works" > "${txtFile}"
+# figlet -f elite "it works" > "${txtFile}"
+figlet -f elite "$(randomTxt)" > "${txtFile}"
 python3 vendor/img2braille.py "$(randomImg)" > "${imgFile}"
 
 imgWidth=$(head -n 1 "${imgFile}")
