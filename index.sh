@@ -44,7 +44,7 @@ done <"text.txt"
 
 while true; do
 
-  figlet -f elite -w $(($(tput cols) / 2)) "$(randomTxt)" > "${txtFile}"
+  figlet -f elite -w $(( $(( $(tput cols) / 3 )) * 2 )) "$(randomTxt)" > "${txtFile}"
   python3 vendor/img2braille.py "$(randomImg)" > "${imgFile}"
 
   # TODO random/manual position
