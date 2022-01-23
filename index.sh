@@ -5,6 +5,30 @@ source "./utils.sh"
 
 trap cleanup EXIT SIGINT
 
+lineCount () {
+  wc -l "${1}" | cut -d ' ' -f 1
+}
+
+getXMargin () {
+  echo -ne "$(($(($(tput cols) - ${#1})) / 2))"
+}
+
+printXMargin () {
+  for i in $(seq "${1}"); do echo -n "${space}"; done
+}
+
+getYMargin () {
+  echo -ne "$(( $(($(tput lines) - ${1})) / 2 ))"
+}
+
+printYMargin () {
+  for i in $(seq "${1}"); do echo ; done
+}
+
+printSpace () {
+  echo -e "${1}" | sed "s/ /${space}/g"
+}
+
 export space="\x1b[1C"
 
 imgFile=$(mktemp)
@@ -28,72 +52,64 @@ while true; do
 
   # 1
   imgWidth=$(head -n 1 "${imgFile}")
-  imgHeight=$(wc -l "${imgFile}" | cut -d ' ' -f 1)
+  imgHeight=$(lineCount "${imgFile}")
   imgXMargin=$(($(($(tput cols) - ${#imgWidth})) / 2))
-  imgYMargin=$(( $(( $(tput lines) - imgHeight )) / 2 ))
-  imgXSpace=$(for i in $(seq ${imgXMargin}); do echo -n "${space}"; done)
+  imgYMargin=$(getYMargin "${imgHeight}")
+  imgXSpace=$(printXMargin ${imgXMargin})
 
   # 1
   txtWidth=$(head -n 1 "${txtFile}")
-  txtHeight=$(wc -l "${txtFile}" | cut -d ' ' -f 1)
+  txtHeight=$(lineCount "${txtFile}")
   txtXMargin=$(($(($(tput cols) - ${#txtWidth})) / 2))
-  txtYMargin=$(( $(($(tput lines) - txtHeight)) / 2 ))
-  txtXSpace=$(for i in $(seq ${txtXMargin}); do echo -n "${space}"; done)
+  txtYMargin=$(getYMargin "${txtHeight}")
+  txtXSpace=$(printXMargin ${txtXMargin})
 
   # 2 (render img)
   echo -ne "\x1Bc\x1b[3J\x1b[?25l\x1b[38;5;$(random256)m\x1b[1m\x1b[1;1H"
-  for i in $(seq ${imgYMargin}); do echo; done
+  printYMargin "${imgYMargin}"
   while IFS= read -r line; do
-    echo -e "${imgXSpace}${line}" | sed "s/ /${space}/g"
-  done <${imgFile} | tail -n $(( $(tput lines) - 5 ))
+    printSpace "${imgXSpace}${line}"
+    # echo -e "${imgXSpace}${line}" | sed "s/ /${space}/g"
+  done <"${imgFile}" | tail -n $(( $(tput lines) - 5 ))
   tput cup 0 0
 
   # 2 (render txt)
   echo -ne "\x1b[38;5;$(random256)m\x1b[1m"
-  for i in $(seq ${txtYMargin}); do echo; done
+  printYMargin "${txtYMargin}"
   while IFS= read -r line; do
-   echo -e "${txtXSpace}${line}" | sed "s/ /${space}/g"
-  done <${txtFile} | tail -n $(( $(tput lines) - 5 ))
+  printSpace "${txtXSpace}${line}"
+  done <"${txtFile}" | tail -n $(( $(tput lines) - 5 ))
 
-  # 3 (prompt 1)
   prompt="press <ANY KEY> to generate another image"
-  promptXMargin=$(( $(( $(tput cols) - ${#prompt} )) / 2 ))
-  promptXSpace=$(for i in $(seq ${promptXMargin}); do echo -n "${space}"; done)
-  formattedPrompt=$(echo -e "${promptXSpace}${prompt}" | sed "s/ /${space}/g")
+  promptXMargin=$(getXMargin "${prompt}")
+  promptXSpace=$(printXMargin "${promptXMargin}")
+  formattedPrompt=$(printSpace "${promptXSpace}${prompt}")
 
-  # 3 (prompt 2)
-  quitTxt="press <q> to quit"
-  quitXMargin=$(( $(( $(tput cols) - ${#quitTxt} )) / 2 ))
-  quitXSpace=$(for i in $(seq ${quitXMargin}); do echo -n "${space}"; done)
-  # quitXSpace=(seq 0 "${quitXMargin}") echo -n "${space}"
+  quit="press <q> to quit"
+  quitXMargin=$(( $(( $(tput cols) - ${#quit} )) / 2 ))
+  quitXSpace=$(printXMargin ${quitXMargin})
 
-  # 4
-  if [[ ${imgYMargin} -lt 1 ]]; then
-    quitPos=$(( imgHeight + 1 ))
-  else
+  [[ ${imgYMargin} -lt 1 ]] && 
+    quitPos=$(( imgHeight + 1 )) ||
     quitPos=$(( imgHeight + imgYMargin + 1 ))
-  fi
 
-  # 4
-  if [[ ${quitPos} -ge $(( $(tput lines) - 2 )) ]]; then
-    tput cup $(( $(tput lines) - 2 )) 0
-  else
-    tput cup $(( imgHeight + imgYMargin + 1 )) 0
-  fi
-  echo -e "${quitXSpace}${quitTxt}"
+  (
+    [[ ${quitPos} -ge $(( $(tput lines) - 2 )) ]] &&
+    tput cup $(( $(tput lines) - 2 )) 0 
+  ) || 
+  tput cup $(( imgHeight + imgYMargin + 1 )) 0
 
-  # 4
-  if [[ ${imgYMargin} -gt 2 ]]; then
+  echo -e "${quitXSpace}${quit}"
+
+  (
+    [[ ${imgYMargin} -gt 2 ]] &&
     tput cup $(( imgYMargin - 2 )) 0
-  else
-    tput cup 0 0
-  fi
-
-  # auto
-  # echo -e "${formattedPrompt}"
-  # sleep 0.9
+  ) ||
+  tput cup 0 0
   
-  # manual
   read -p "${formattedPrompt}" -rn1 key
   if [[ ${key} == "q" ]]; then exit 0; fi
+
+  # echo -e "${formattedPrompt}"
+  # sleep 0.9
 done
