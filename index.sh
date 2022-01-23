@@ -7,22 +7,14 @@ source "./spacing.sh"
 
 trap cleanup EXIT SIGINT
 
-txtSource="text.txt"
-
 imgFile=$(mktemp)
 txtFile=$(mktemp)
-
-declare -a txtList
-
-while IFS= read -r line; do
-  txtList+=("${line}") 
-done <text.txt
 
 ####
 
 while true; do
 
-  figlet -f elite -w $(( $(( $(tput cols) / 3 )) * 2 )) "$(randomTxt ${txtSource})" > "${txtFile}"
+  figlet -f elite -w $(( $(( $(tput cols) / 3 )) * 2 )) "$(randomTxt)" > "${txtFile}"
   python3 vendor/img2braille.py "$(randomImg)" > "${imgFile}"
 
   # TODO random/manual position

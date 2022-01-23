@@ -4,7 +4,8 @@ lineCount () {
   wc -l "${1}" | cut -d ' ' -f 1
 }
 
-mapfile -t list < <(ls "images")
+mapfile -t list < <(ls -1 "images")
+mapfile -t txtList < <(echo -e "$(cat "text.txt")")
 # can you do w/ mapfile -t ${1} < <(ls "${2}")
 # https://github-wiki-see.page/m/koalaman/shellcheck/wiki/SC2207
 
@@ -22,7 +23,6 @@ randomImg () {
 }
 
 randomTxt () {
-  choices="${1}"
-  selection=${choices[$RANDOM % ${#choices[@]} ]}
+  selection=${txtList[$RANDOM % ${#txtList[@]} ]}
   echo "${selection}"
 }
