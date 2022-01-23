@@ -1,44 +1,46 @@
 #!/usr/local/bin/bash
 
-# don't judge.
+# shellcheck disable=SC1091
+source "./utils.sh"
 
 trap cleanup EXIT SIGINT
 
 ####
 
-declare -a list=($(ls "images"))
-declare -a txtList
+# declare -a list=($(ls "images"))
 imgFile=$(mktemp)
 txtFile=$(mktemp)
-space="\x1b[1C"
-input="${@}"
-[[ -z "${@}" ]] && input="image.png"
+# space="\x1b[1C"
+# input="${*}"
+# [[ -z "${*}" ]] && input="image.png"
 
 ####
 
-cleanup () {
-  tput reset && echo "quit" && exit 0
-}
-
-random256 () {
-  echo $(( $RANDOM % 256 + 1 ))
-}
-
-randomImg () {
-  selection=${list[$RANDOM % ${#list[@]} ]}
-  echo "images/${selection}"
-}
-
-randomTxt () {
-  selection=${txtList[$RANDOM % ${#txtList[@]} ]}
-  echo "${selection}"
-}
+# cleanup () {
+  # tput reset && echo "quit" && exit 0
+# }
+# 
+# random256 () {
+  # echo $(( $RANDOM % 256 + 1 ))
+# }
+# 
+# randomImg () {
+  # selection=${list[$RANDOM % ${#list[@]} ]}
+  # echo "images/${selection}"
+# }
+# 
+# randomTxt () {
+  # selection=${txtList[$RANDOM % ${#txtList[@]} ]}
+  # echo "${selection}"
+# }
 
 ####
-
-while IFS= read -r line; do
-  txtList+=("${line}") 
-done <"text.txt"
+# 
+# declare -a txtList
+# 
+# while IFS= read -r line; do
+  # txtList+=("${line}")
+# done <"text.txt"
 
 ####
 
@@ -113,10 +115,10 @@ while true; do
   fi
 
   # auto
-  echo -e "${formattedPrompt}"
-  sleep 0.9
+  # echo -e "${formattedPrompt}"
+  # sleep 0.9
   
   # manual
-  # read -p "${formattedPrompt}" -n1 key
-  # if [[ ${key} == "q" ]]; then exit 0; fi
+  read -p "${formattedPrompt}" -rsn1 key
+  if [[ ${key} == "q" ]]; then exit 0; fi
 done
