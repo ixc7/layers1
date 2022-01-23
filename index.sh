@@ -1,35 +1,13 @@
 #!/usr/local/bin/bash
 
 # shellcheck disable=SC1091
+
 source "./utils.sh"
+source "./spacing.sh"
 
 trap cleanup EXIT SIGINT
 
-lineCount () {
-  wc -l "${1}" | cut -d ' ' -f 1
-}
-
-getXMargin () {
-  echo -ne "$(($(($(tput cols) - ${#1})) / 2))"
-}
-
-printXMargin () {
-  for i in $(seq "${1}"); do echo -n "${space}"; done
-}
-
-getYMargin () {
-  echo -ne "$(( $(($(tput lines) - ${1})) / 2 ))"
-}
-
-printYMargin () {
-  for i in $(seq "${1}"); do echo ; done
-}
-
-printSpace () {
-  echo -e "${1}" | sed "s/ /${space}/g"
-}
-
-export space="\x1b[1C"
+txtSource="text.txt"
 
 imgFile=$(mktemp)
 txtFile=$(mktemp)
@@ -44,7 +22,7 @@ done <text.txt
 
 while true; do
 
-  figlet -f elite -w $(( $(( $(tput cols) / 3 )) * 2 )) "$(randomTxt)" > "${txtFile}"
+  figlet -f elite -w $(( $(( $(tput cols) / 3 )) * 2 )) "$(randomTxt ${txtSource})" > "${txtFile}"
   python3 vendor/img2braille.py "$(randomImg)" > "${imgFile}"
 
   # TODO random/manual position

@@ -1,12 +1,11 @@
 #!/usr/local/bin/bash
 
-# declare -a txtList
-# 
-# while IFS= read -r line; do
-  # txtList+=("${line}")
-# done <"text.txt"
+lineCount () {
+  wc -l "${1}" | cut -d ' ' -f 1
+}
 
 mapfile -t list < <(ls "images")
+# can you do w/ mapfile -t ${1} < <(ls "${2}")
 # https://github-wiki-see.page/m/koalaman/shellcheck/wiki/SC2207
 
 cleanup () {
@@ -23,11 +22,7 @@ randomImg () {
 }
 
 randomTxt () {
-  selection=${txtList[$RANDOM % ${#txtList[@]} ]}
+  choices="${1}"
+  selection=${choices[$RANDOM % ${#choices[@]} ]}
   echo "${selection}"
 }
-
-# export space="\x1b[1C"
-# export space
-# export list
-# export txtList
