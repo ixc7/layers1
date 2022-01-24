@@ -21,3 +21,15 @@ printYMargin () {
 printSpace () {
   echo -e "${1}" | sed "s/ /${space}/g"
 }
+
+defineMargins () {
+  prefix="${1}"
+  height="$(lineCount "${2}")"
+  width="$(head -n 1 "${2}")"
+  xMargin=$(($(($(tput cols) - ${#width})) / 2))
+  export declare "${prefix}"Width="${width}"
+  export declare "${prefix}"Height="${height}"
+  export declare "${prefix}"XMargin="${xMargin}"
+  export declare "${prefix}"YMargin="$(getYMargin "${height}")"
+  export declare "${prefix}"XSpace="$(printXMargin "${xMargin}")"
+}
