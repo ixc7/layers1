@@ -33,3 +33,12 @@ defineMargins () {
   export declare "${prefix}"YMargin="$(getYMargin "${height}")"
   export declare "${prefix}"XSpace="$(printXMargin "${xMargin}")"
 }
+
+# FILENAME, Y, X, MAXHEIGHT
+render () {
+  setRandomColor
+  printYMargin "${2}"
+  while IFS= read -r line; do
+  printSpace "${3}${line}"
+  done <"${1}" | tail -n "${4}"
+}

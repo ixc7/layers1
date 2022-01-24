@@ -5,56 +5,51 @@ source "./spacing.sh"
 
 trap cleanup EXIT SIGINT
 
+###################
+#### constants ####
+###################
+
 promptTxt="press <ANY KEY> to generate another image"
 quitTxt="press <q> to quit"
 imgFile=$(mktemp)
 txtFile=$(mktemp)
 
-# render a new image + title + prompt(s) on every keypress, forever.
 while true; do
 
-  # TODO random/manual/non-centered position
-  # get random text/image selection + position (centered)
+  ###############
+  #### setup ####
+  ###############
+
+  clearScreen
+  maxHeight=$(setMaxHeight)
+  
   randomTxt "${txtFile}"
   randomImg "${imgFile}"
   defineMargins "img" "${imgFile}"
   defineMargins "txt" "${txtFile}"
   
-  # clear/ reset screen + hide cursor
-  echo -ne "\x1Bc\x1b[3J\x1b[?25l"
-  
-  # 1) set image to random color + bold + cursor to (0, 0)
-  echo -ne "\x1b[38;5;$(random256)m\x1b[1m\x1b[0;0H"
-  
-  # 1) render image
-  printYMargin "${imgYMargin}"
-  while IFS= read -r line; do
-    printSpace "${imgXSpace}${line}"
-  done <"${imgFile}" |
-  
-  # 1) tail -n limits maximum height of image
-  tail -n $(( $(tput lines) - 5 ))
-
-  # 2) set text to random color + bold + cursor to (0, 0)
-  echo -ne "\x1b[38;5;$(random256)m\x1b[1m\x1b[0;0H"
-
-  # 2) render text
-  printYMargin "${txtYMargin}"
-  while IFS= read -r line; do
-  printSpace "${txtXSpace}${line}"
-  done <"${txtFile}" |
-  
-  # 2) tail -n, but for text. not really needed rn...
-  tail -n $(( $(tput lines) - 5 ))
-
-  # get positions for/ format 'keypress' prompt
+  # get positions for 'keypress' and 'quit' prompts
+  # use defineMargins?
   promptXMargin=$(getXMargin "${promptTxt}")
   promptXSpace=$(printXMargin "${promptXMargin}")
-  formattedPrompt=$(printSpace "${promptXSpace}${promptTxt}")
-
-  # get positions for 'quit' prompt
   quitXMargin=$(( $(( $(tput cols) - ${#quitTxt} )) / 2 ))
   quitXSpace=$(printXMargin ${quitXMargin})
+  
+  # replace 'keypress' prompt whitespace w/ esc chars
+  formattedPrompt=$(printSpace "${promptXSpace}${promptTxt}")
+
+
+  #############################
+  #### render image + text ####
+  #############################
+  
+  render "${imgFile}" "${imgYMargin}" "${imgXSpace}" "${maxHeight}"
+  render "${txtFile}" "${txtYMargin}" "${txtXSpace}" "${maxHeight}"
+
+
+  ########################
+  #### render prompts ####
+  ########################
 
   # place 'quit' prompt 1 line below the image
   [[ ${imgYMargin} -le 1 ]] && 
@@ -64,23 +59,30 @@ while true; do
     quitPos=$(( imgHeight + imgYMargin + 1 ))
 
   (
+    # if quit position is below the screen, move up 1 line
     [[ ${quitPos} -ge $(( $(tput lines) - 2 )) ]] &&
-    echo -e "\x1b[$(($(tput lines) - 3));0H"
+    cursorTo $(($(tput lines) - 1)) 0
   ) || 
-  echo -e "\x1b[$((imgHeight + imgYMargin + 1));0H" 
+  # else, position normally
+  # cursorTo $((imgHeight + imgYMargin + 1)) 0
+  cursorTo $((imgHeight + imgYMargin + 2)) 0
   echo -e "${quitXSpace}${quitTxt}"
 
   # place 'keypress' prompt directly above the image
   # if image can be centered on screen, cursor to (2 lines above image)
   (
     [[ ${imgYMargin} -ge 2 ]] &&
-    echo -e "\x1b[$((imgYMargin - 2));0H"
+    cursorTo $((imgYMargin - 1)) 0
   ) ||
   # else, if image takes up entire screen height, cursor to (0, 0)
-  echo -ne "\x1b[0;0H"
-
-  # (read keypresses)
-  # TODO read once then close
+  cursorTo 0 0
   read -p "${formattedPrompt}" -rn1 key
+
+
+  ########################
+  #### get user input ####
+  ########################
+  
+  # read keypresses, break if key == 'q'
   if [[ ${key} == "q" ]]; then exit 0; fi
 done
