@@ -1,20 +1,14 @@
 #!/usr/local/bin/bash
 
-# shellcheck disable=SC1091
-# shellcheck disable=SC2154
-
 source "./utils.sh"
 source "./spacing.sh"
 
 trap cleanup EXIT SIGINT
 
-prompt="press <ANY KEY> to generate another image"ß
-quitPrompt="press <q> to quit"
-
+promptTxt="press <ANY KEY> to generate another image"
+quitTxt="press <q> to quit"
 imgFile=$(mktemp)
 txtFile=$(mktemp)
-
-####
 
 # render a new image + title + prompt(s) on every keypress, forever.
 while true; do
@@ -54,12 +48,12 @@ while true; do
   tail -n $(( $(tput lines) - 5 ))
 
   # get positions for/ format 'keypress' prompt
-  promptXMargin=$(getXMargin "${prompt}")
+  promptXMargin=$(getXMargin "${promptTxt}")
   promptXSpace=$(printXMargin "${promptXMargin}")
-  formattedPrompt=$(printSpace "${promptXSpace}${prompt}")
+  formattedPrompt=$(printSpace "${promptXSpace}${promptTxt}")
 
   # get positions for 'quit' prompt
-  quitXMargin=$(( $(( $(tput cols) - ${#quitPrompt} )) / 2 ))
+  quitXMargin=$(( $(( $(tput cols) - ${#quitTxt} )) / 2 ))
   quitXSpace=$(printXMargin ${quitXMargin})
 
   # place 'quit' prompt 1 line below the image
@@ -74,7 +68,7 @@ while true; do
     echo -e "\x1b[$(($(tput lines) - 3));0H"
   ) || 
   echo -e "\x1b[$((imgHeight + imgYMargin + 1));0H" 
-  echo -e "${quitXSpace}${quitPrompt}"
+  echo -e "${quitXSpace}${quitTxt}"
 
   # place 'keypress' prompt directly above the image
   # if image can be centered on screen, cursor to (2 lines above image)
